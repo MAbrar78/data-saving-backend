@@ -7,16 +7,19 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Environment Variables Setup
+require('dotenv').config();
+
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'https://data-saving-bah3o811o-muhammad-abrars-projects-4365307e.vercel.app/', // Update with your frontend URL
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB connection
-mongoose.connect('mongodb://localhost:27017/DataSaving', {
-  useNewUrlParser: true, // Deprecated option, can be removed
-  useUnifiedTopology: true, // Deprecated option, can be removed
-})
+const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/DataSaving';
+mongoose.connect(mongoURI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
@@ -27,11 +30,15 @@ const DataSchema = new mongoose.Schema({
   description: String,
   link: String,
   image: String,
+  imageName: String,
   audio: String,
+  audioName: String,
   video: String,
+  videoName: String,
   document: String,
-  documentName: String, // Added this field
-  generalFile: String, // Added this field
+  documentName: String,
+  generalFile: String,
+  generalFileName: String,
 }, { timestamps: true });
 
 const Data = mongoose.model('Data', DataSchema);
@@ -53,7 +60,13 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Routes
-app.post('/data', upload.fields([{ name: 'image' }, { name: 'audio' }, { name: 'video' }, { name: 'document' }, { name: 'generalFile' }]), async (req, res) => {
+app.post('/data', upload.fields([
+  { name: 'image' }, 
+  { name: 'audio' }, 
+  { name: 'video' }, 
+  { name: 'document' }, 
+  { name: 'generalFile' }
+]), async (req, res) => {
   try {
     const newData = new Data({
       username: req.body.username,
@@ -80,7 +93,13 @@ app.post('/data', upload.fields([{ name: 'image' }, { name: 'audio' }, { name: '
   }
 });
 
-app.put('/data/:id', upload.fields([{ name: 'image' }, { name: 'audio' }, { name: 'video' }, { name: 'document' }, { name: 'generalFile' }]), async (req, res) => {
+app.put('/data/:id', upload.fields([
+  { name: 'image' }, 
+  { name: 'audio' }, 
+  { name: 'video' }, 
+  { name: 'document' }, 
+  { name: 'generalFile' }
+]), async (req, res) => {
   try {
     const id = req.params.id;
     const existingData = await Data.findById(id);
@@ -170,4 +189,5 @@ app.get('/data', async (req, res) => {
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
